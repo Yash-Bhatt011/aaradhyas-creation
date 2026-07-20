@@ -1,0 +1,13 @@
+{
+  "name": "aaradhyas-creation",
+  "private": true,
+  "scripts": {
+    "setup": "npm --prefix backend install && npm --prefix frontend install && npm --prefix backend run seed",
+    "dev": "npx concurrently -n backend,frontend -c yellow,cyan \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "build": "npm --prefix frontend run build",
+    "seed": "npm --prefix backend run seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
