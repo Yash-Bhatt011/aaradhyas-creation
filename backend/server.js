@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const path = require("path");
+const db = require("./db");
 
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
@@ -65,6 +66,16 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Aaradhya's Creation API running on port ${PORT}`);
-});
+
+(async () => {
+  try {
+    await db.init(); // connects to MongoDB if MONGODB_URI is set, else no-op
+    app.listen(PORT, () => {
+      console.log(`Aaradhya's Creation API running on port ${PORT}`);
+      console.log(`Storage mode: ${db.USE_MONGO ? "MongoDB (persistent)" : "Local JSON file (data/db.json)"}`);
+    });
+  } catch (err) {
+    console.error("Failed to start server:", err);
+    process.exit(1);
+  }
+})();

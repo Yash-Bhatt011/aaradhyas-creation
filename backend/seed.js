@@ -1,7 +1,7 @@
 // seed.js — populates data/db.json with starter content (run with `npm run seed`)
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
-const { read, write } = require("./db");
+const { init, read, write, close } = require("./db");
 
 const collections = [
   { id: "bridal", title: "Bridal Sarees", sub: "Heirlooms for the big day", category:"saree", seed: "aaradhya-bridal", active: true, count: 48 },
@@ -66,6 +66,7 @@ const reviews = [
 ];
 
 async function seed() {
+  await init(); // connects to MongoDB if MONGODB_URI is set, else no-op
   const db = read();
 
   db.collections = collections;
@@ -92,13 +93,18 @@ async function seed() {
     console.log(`Admin account already exists: ${adminEmail}`);
   }
 
-  write(db);
+  await write(db);
   console.log("Seed complete:", {
     products: db.products.length,
     collections: db.collections.length,
     discounts: db.discounts.length,
     admins: db.admins.length
   });
+  await close();
+  process.exit(0);
 }
 
-seed();
+seed().catch(err => {
+  console.error("Seed failed:", err);
+  process.exit(1);
+});
