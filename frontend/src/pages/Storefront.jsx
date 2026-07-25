@@ -151,7 +151,7 @@ export default function Storefront() {
         <Link to="/" className="sf2-brand">
           <Logo size={44}/>
           <div className="sf2-brand-text">
-            <h1>Aaradhya <em>Creation</em></h1>
+            <h1>Aaradhya's <em>Creation</em></h1>
             <p>Grace. Tradition. You.</p>
           </div>
         </Link>
