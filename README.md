@@ -171,15 +171,46 @@ Set env vars in Railway dashboard.
 
 ---
 
-## Upgrading the Database
+## Persistent Database (MongoDB Atlas — Free Forever)
 
-The current database is a JSON file (`backend/data/db.json`) — perfect for a single-server deployment, handles thousands of orders comfortably. When you're ready to scale:
+**Important for Render/Railway free tier deploys:** by default this project stores data in a local JSON file (`backend/data/db.json`). That's fine for local development, but on free hosting tiers the filesystem is wiped on every redeploy or restart — meaning your products, orders, and admin login would reset each time.
 
-1. Add `pg` or `mongoose` to backend
-2. Re-implement `db.js` with the same `read()` / `write()` / `nextId()` interface
-3. No other files need to change
+The fix: connect a free MongoDB Atlas database (512MB free forever, no credit card required). Data then survives every redeploy automatically — no code changes needed on your end.
+
+### Setup (5 minutes)
+
+1. Sign up at [mongodb.com/cloud/atlas/register](https://www.mongodb.com/cloud/atlas/register)
+2. Create a free **M0 cluster** (select any region close to you)
+3. **Database Access** (left sidebar) → Add New Database User → set a username + password (save these!)
+4. **Network Access** (left sidebar) → Add IP Address → **Allow Access from Anywhere** (`0.0.0.0/0`)
+   *(Render's servers use dynamic IPs, so this is required — Atlas still requires username/password auth, so this is safe.)*
+5. **Database → Connect → Drivers** → copy the connection string, it looks like:
+   ```
+   mongodb+srv://username:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+   ```
+6. Replace `<password>` with the actual password from step 3
+
+### Add it to your backend
+
+**Local development** — add to `backend/.env`:
+```
+MONGODB_URI=mongodb+srv://username:yourpassword@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+```
+
+**Render production** — go to your backend service → **Environment** tab → add:
+```
+MONGODB_URI=mongodb+srv://username:yourpassword@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+```
+Then redeploy. Check the deploy logs — you should see:
+```
+MongoDB: connected and data loaded successfully.
+Storage mode: MongoDB (persistent)
+```
+
+That's it. Your data now survives every redeploy permanently. Leave `MONGODB_URI` blank to keep using the local JSON file (e.g. for quick local testing).
 
 ---
+
 
 ## Replacing Placeholder Images
 

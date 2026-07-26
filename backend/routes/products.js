@@ -1,28 +1,7 @@
 const express = require("express");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 const { read, write, nextId } = require("../db");
 const { requireAuth } = require("../middleware/auth");
-
-const uploadDir = path.join(__dirname, "..", "uploads", "products");
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `prod-${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`);
-  }
-});
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-  fileFilter: (req, file, cb) => {
-    const ok = /\.(jpe?g|png|webp|gif)$/i.test(file.originalname);
-    cb(ok ? null : new Error("Only image files are allowed"), ok);
-  }
-});
+const { upload, uploadBuffer } = require("../services/imageUpload");
 
 const router = express.Router();
 
@@ -100,14 +79,21 @@ router.delete("/:id", requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
-// Admin: upload product image(s) — returns array of server URLs
+// Admin: upload product image(s) — returns array of persistent URLs
 // POST /api/products/upload-images  (multipart, field name: "images", up to 5 files)
-router.post("/upload-images", requireAuth, upload.array("images", 5), (req, res) => {
+router.post("/upload-images", requireAuth, upload.array("images", 5), async (req, res) => {
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ error: "No images received" });
   }
-  const urls = req.files.map(f => `/uploads/products/${f.filename}`);
-  res.json({ urls });
+  try {
+    const urls = await Promise.all(
+      req.files.map(f => uploadBuffer(f.buffer, "products", f.originalname))
+    );
+    res.json({ urls });
+  } catch (e) {
+    console.error("Product image upload failed:", e);
+    res.status(500).json({ error: "Image upload failed" });
+  }
 });
 
 
@@ -159,7 +145,7 @@ router.get("/:id/reviews", (req, res) => {
 });
 
 // POST /api/products/:id/reviews  (public — any customer can submit)
-router.post("/:id/reviews", upload.array("images", 4), (req, res) => {
+router.post("/:id/reviews", upload.array("images", 4), async (req, res) => {
   const db = read();
   const product = db.products.find(p => String(p.id) === String(req.params.id));
   if (!product) return res.status(404).json({ error: "Product not found" });
@@ -167,7 +153,16 @@ router.post("/:id/reviews", upload.array("images", 4), (req, res) => {
   const id = (db.nextIds.review = (db.nextIds.review || 1));
   db.nextIds.review += 1;
 
-  const images = (req.files || []).map(f => `/uploads/products/${f.filename}`);
+  let images = [];
+  try {
+    images = await Promise.all(
+      (req.files || []).map(f => uploadBuffer(f.buffer, "reviews", f.originalname))
+    );
+  } catch (e) {
+    console.error("Review image upload failed:", e);
+    // Continue without images rather than failing the whole review
+  }
+
   const review = {
     id,
     productId: Number(req.params.id),
