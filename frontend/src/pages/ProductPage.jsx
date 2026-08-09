@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Logo, StarRow, ZariDivider, Card3D } from "../components/shared.jsx";
 import CartDrawer from "../components/CartDrawer.jsx";
+import LazyImage from "../components/LazyImage.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { api } from "../api/client.js";
 import { img, rupee } from "../data/content.js";
@@ -61,7 +62,7 @@ function ReviewCard({ r }) {
       {r.images?.length > 0 && (
         <div className="pd-review-imgs">
           {r.images.map((src, i) => (
-            <img key={i} src={resolveImg(src, 200, 200)} alt="Customer photo" className="pd-review-img"/>
+            <LazyImage key={i} src={resolveImg(src, 200, 200)} alt="Customer photo" className="pd-review-img"/>
           ))}
         </div>
       )}
@@ -331,7 +332,7 @@ export default function ProductPage() {
               {gallery.map((src, i) => (
                 <div key={i} className={`pd-thumb ${i===activeIdx?"active":""}`}
                   onClick={() => setActiveIdx(i)}>
-                  <img src={src} alt={`${product.name} view ${i+1}`}/>
+                  <LazyImage src={src} alt={`${product.name} view ${i+1}`}/>
                 </div>
               ))}
             </div>
@@ -350,6 +351,8 @@ export default function ProductPage() {
                   src={gallery[activeIdx]}
                   alt={product.name}
                   className="pd-main-img"
+                  loading="eager"
+                  decoding="async"
                   style={{ transform: zoomed ? "scale(2.2)" : "scale(1)",
                     transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
                     transition: zoomed ? "none" : "transform .25s ease" }}
@@ -666,7 +669,7 @@ export default function ProductPage() {
                   <Card3D key={p.id}>
                     <div className="ac-prod-card" onClick={() => navigate(`/product/${p.id}`)} style={{cursor:"pointer"}}>
                       <div className="ac-prod-imgwrap">
-                        <img className="first" src={rImg} alt={p.name}/>
+                        <LazyImage src={rImg} alt={p.name}/>
                         <div className="ac-quickadd" onClick={e=>{e.stopPropagation();cart.addItem(p);}}>+ Quick Add</div>
                       </div>
                       <div className="ac-prod-info">

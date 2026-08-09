@@ -8,11 +8,17 @@
         .ac-root ::-webkit-scrollbar-track { background:var(--ivory); }
         .ac-grain { position:fixed; inset:0; z-index:999; pointer-events:none; opacity:0.032; mix-blend-mode:overlay; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 
-        /* Preloader */
-        .ac-preloader { position:fixed; inset:0; z-index:1000; background:var(--onyx); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; transition:opacity .8s ease, visibility .8s ease; }
+        /* Welcome intro (replaces logo preloader) */
+        .ac-preloader { position:fixed; inset:0; z-index:1000; background:var(--onyx); display:flex; align-items:center; justify-content:center; transition:opacity .8s ease, visibility .8s ease; padding:20px; }
         .ac-preloader.hide { opacity:0; visibility:hidden; }
-        .mandala3d { animation:mandalaSpin 0s linear; }
-        .ac-preloader span { font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.34em; color:rgba(251,246,236,0.5); text-transform:uppercase; }
+        .ac-welcome-frame { text-align:center; display:flex; flex-direction:column; align-items:center; gap:18px; animation: welcomeFadeIn 1s ease both; }
+        .ac-welcome-line { width:1px; height:34px; background:linear-gradient(180deg, transparent, var(--gold), transparent); animation: welcomeLineGrow 1.2s ease both; }
+        .ac-welcome-eyebrow { font-family:'Cinzel',serif; font-size:10.5px; letter-spacing:0.32em; color:var(--gold); text-transform:uppercase; margin:0; opacity:0.85; }
+        .ac-welcome-title { font-family:'Cormorant Garamond',serif; font-weight:500; font-size:clamp(28px,5vw,46px); color:var(--ivory); line-height:1.3; margin:0; }
+        .ac-welcome-title em { font-style:italic; color:var(--gold); }
+        .ac-welcome-sub { font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.22em; color:rgba(251,246,236,0.55); text-transform:uppercase; margin:0; }
+        @keyframes welcomeFadeIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+        @keyframes welcomeLineGrow { from{height:0;} to{height:34px;} }
 
         /* Typography */
         .ac-root h1,.ac-root h2,.ac-root h3,.ac-root h4 { font-family:'Cormorant Garamond',serif; font-weight:600; margin:0; letter-spacing:0.01em; }
@@ -290,8 +296,9 @@
         .ac-mobile-menu li { list-style:none; font-family:'Cormorant Garamond',serif; font-size:26px; font-style:italic; padding:16px 0; border-bottom:1px solid var(--beige); cursor:pointer; }
         @media(prefers-reduced-motion:reduce){ .ac-hero img,.ac-marquee{animation:none!important;} }
 
-/* ── Mobile nav fix (burger shown <860px, links hidden) ── */
-@media (max-width: 860px) {
+/* ── Mobile nav fix (burger hidden by default, shown <960px; links hidden on mobile) ── */
+.ac-burger-mobile { display: none; }
+@media (max-width: 960px) {
   .ac-burger-mobile { display: flex !important; }
   .ac-links { display: none !important; }
 }
@@ -322,15 +329,17 @@
 
 /* ── Checkout ── */
 .checkout-wrap { max-width:1080px; margin:0 auto; padding:54px 5vw 100px; display:grid; grid-template-columns:1.2fr 1fr; gap:50px; }
-@media(max-width:860px){ .checkout-wrap{ grid-template-columns:1fr; } }
+@media(max-width:860px){ .checkout-wrap{ grid-template-columns:1fr; padding:28px 5vw 60px; gap:32px; } }
 .checkout-form { display:flex; flex-direction:column; gap:16px; }
 .checkout-form h2 { font-family:'Cormorant Garamond',serif; font-style:italic; color:var(--wine); font-size:26px; margin-bottom:6px; }
 .checkout-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media(max-width:560px){ .checkout-row{ grid-template-columns:1fr; } }
 .checkout-field { display:flex; flex-direction:column; gap:6px; }
 .checkout-field label { font-size:11px; letter-spacing:0.1em; text-transform:uppercase; font-family:'Cinzel',serif; color:var(--gold-dark); }
 .checkout-field input, .checkout-field select { padding:12px 14px; border:1px solid var(--beige); border-radius:2px; font-size:13.5px; font-family:'Lato',sans-serif; background:var(--ivory); outline:none; }
 .checkout-field input:focus, .checkout-field select:focus { border-color:var(--gold); }
 .checkout-payment { display:flex; gap:12px; margin-top:6px; }
+@media(max-width:480px){ .checkout-payment{ flex-direction:column; } }
 .pay-option { flex:1; border:1px solid var(--beige); border-radius:4px; padding:16px; cursor:pointer; text-align:center; font-size:13px; transition:all .2s; }
 .pay-option.active { border-color:var(--gold); background:var(--cream); color:var(--wine); }
 .checkout-summary { background:var(--cream); border-radius:4px; padding:26px; height:fit-content; }
@@ -646,4 +655,108 @@
   cursor: pointer; transition: all .2s;
 }
 .sf2-cat-tabs button:hover { border-color: var(--gold); color: var(--wine); }
+
+/* ══════════════════════════════════════════════
+   SF2 RESPONSIVE — tablet & mobile
+══════════════════════════════════════════════ */
+
+/* Tablet (≤960px): hide desktop nav links, show burger */
+@media(max-width:960px){
+  .sf2-nav-links { display: none; }
+}
+
+/* Topbar: on small screens keep only the essentials, hide extras */
+@media(max-width:700px){
+  .sf2-topbar { padding: 7px 4vw; font-size: 10.5px; justify-content: center; }
+  .sf2-topbar-left { display: none; } /* shipping banner text — nav bar repeats this info visually via icons */
+  .sf2-topbar-right { gap: 14px; justify-content: center; width: 100%; }
+  .sf2-topbar-right span { display: none; } /* Wishlist text-only entry, redundant with header icon */
+}
+@media(max-width:420px){
+  .sf2-topbar-right a:nth-child(1) span,
+  .sf2-topbar-right a:nth-child(3) span { display: none; } /* keep icons, drop labels on very small screens */
+}
+
+/* Header: stack brand + icons row, full-width search below on small screens */
+@media(max-width:760px){
+  .sf2-header { padding: 12px 4vw; gap: 10px; }
+  .sf2-brand { order: 1; }
+  .sf2-brand-text h1 { font-size: 17px; }
+  .sf2-brand-text p { font-size: 8.5px; }
+  .ac-burger-mobile { order: 2; margin-left: auto; }
+  .sf2-header-icons { order: 3; gap: 16px; margin-left: 0; }
+  .sf2-search { order: 4; width: 100%; max-width: none; flex-basis: 100%; margin: 0; }
+  .sf2-icon-link span { display: none; } /* icon-only on mobile to save space */
+}
+@media(max-width:420px){
+  .sf2-brand-text p { display: none; }
+  .sf2-header { gap: 8px; }
+}
+
+/* Hero: smaller min-heights and padding on mobile so it doesn't dominate the viewport */
+@media(max-width:900px){
+  .sf2-hero-main { min-height: 340px; }
+  .sf2-hero-main-content { padding: 30px 6vw; max-width: 100%; background: linear-gradient(180deg, rgba(251,246,236,0.95) 0%, rgba(251,246,236,0.8) 60%, rgba(251,246,236,0.5) 100%); }
+  .sf2-hero-main-content p { font-size: 13.5px; }
+  .sf2-promo { min-height: 160px; }
+  .sf2-promo-content { padding: 20px 22px; }
+  .sf2-promo-content h3 { font-size: 24px; }
+}
+@media(max-width:480px){
+  .sf2-hero-main { min-height: 300px; }
+  .sf2-hero-cta { padding: 11px 22px; font-size: 11px; }
+}
+
+/* Feature bar: single column on very small screens for readability */
+@media(max-width:560px){
+  .sf2-features { grid-template-columns: 1fr; gap: 14px; padding: 16px 5vw; }
+  .sf2-feature { padding: 0; }
+}
+
+/* Category tabs: allow horizontal scroll instead of wrapping awkwardly */
+@media(max-width:480px){
+  .sf2-cat-tabs { gap: 8px; }
+  .sf2-cat-tabs button { padding: 7px 16px; font-size: 10px; }
+}
 .sf2-cat-tabs button.active { background: var(--wine); border-color: var(--wine); color: var(--ivory); }
+
+/* ══════════════════════════════════════════════
+   LAZY IMAGE + SKELETON LOADER
+══════════════════════════════════════════════ */
+.lazy-img-wrap {
+  display: block; position: relative; overflow: hidden;
+  background: var(--cream); width: 100%; height: 100%;
+}
+.lazy-img-skeleton {
+  position: absolute; inset: 0;
+  background: linear-gradient(100deg,
+    var(--cream) 30%, var(--beige) 50%, var(--cream) 70%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+@keyframes skeletonShimmer {
+  0%   { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+.lazy-img-real {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  opacity: 0; transition: opacity .45s ease;
+}
+.lazy-img-real.loaded { opacity: 1; }
+.lazy-img-fallback {
+  position: absolute; inset: 0; display: flex;
+  align-items: center; justify-content: center;
+  color: var(--gold-dark); opacity: 0.4; background: var(--cream);
+}
+
+/* When used inside existing product/collection card wrappers that already
+   position an <img>, make the lazy wrapper fill the same slot */
+.ac-prod-imgwrap .lazy-img-wrap,
+.ac-bs-imgwrap .lazy-img-wrap,
+.ac-coll-card .lazy-img-wrap,
+.ac-fab-card .lazy-img-wrap,
+.ac-occ-circle .lazy-img-wrap,
+.ac-gal-item .lazy-img-wrap {
+  position: absolute; inset: 0;
+}

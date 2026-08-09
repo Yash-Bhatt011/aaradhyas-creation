@@ -24,7 +24,12 @@
 
 /* ── Gallery ── */
 .pd-gallery { display: flex; gap: 12px; position: sticky; top: 80px; align-self: start; width: 100%; }
-@media(max-width:900px){ .pd-gallery{ position:static; } }
+@media(max-width:900px){
+  .pd-gallery{ position:static; flex-direction: column; }
+  .pd-main-img-wrap { order: 1; }
+  .pd-thumbs { order: 2; flex-direction: row; width: 100%; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .pd-thumb { width: 58px; height: 74px; }
+}
 
 .pd-thumbs {
   display: flex; flex-direction: column; gap: 10px; width: 74px; flex-shrink: 0;
@@ -44,6 +49,7 @@
   cursor: crosshair; background: #f3ede5;
   box-shadow: 0 4px 24px rgba(0,0,0,0.10);
 }
+@media(max-width:900px){ .pd-main-img-wrap{ aspect-ratio: 4/5; cursor: default; } }
 /* When no photos: remove crosshair, show centred message */
 .pd-main-img-wrap.pd-no-photo { cursor: default; border: 2px dashed var(--beige); background: var(--cream); }
 

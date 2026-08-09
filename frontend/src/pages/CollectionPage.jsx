@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, Heart, ShoppingBag } from "lucide-react";
 import { Logo, StarRow, Card3D, ZariDivider } from "../components/shared.jsx";
 import CartDrawer from "../components/CartDrawer.jsx";
+import LazyImage from "../components/LazyImage.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { api } from "../api/client.js";
 import { img, rupee } from "../data/content.js";
@@ -82,7 +83,7 @@ export default function CollectionPage() {
         <>
           {/* Collection Hero Banner */}
           <div className="ac-coll-hero">
-            <img src={resolveImg(collection?.seed, 1800, 600)} alt={collection?.title} />
+            <LazyImage eager src={resolveImg(collection?.seed, 1800, 600)} alt={collection?.title} />
             <div className="ac-coll-hero-overlay">
               <Link to="/" className="ac-coll-back"><ChevronLeft size={16} /> Back to Store</Link>
               <h1>{collection?.title}</h1>
@@ -127,8 +128,8 @@ export default function CollectionPage() {
                       <button className="ac-wish-btn" onClick={(e)=>{e.stopPropagation();e.preventDefault();toggleWishlist(p.id);}}>
                         <Heart size={15} fill={wishlist.has(p.id) ? "#4C0E1B" : "none"} color="#4C0E1B" />
                       </button>
-                      <img className="first"  src={mainImg}  alt={p.name} />
-                      <img className="second" src={hoverImg} alt={p.name} />
+                      <img className="first"  src={mainImg}  alt={p.name} loading="lazy" decoding="async"/>
+                      <img className="second" src={hoverImg} alt={p.name} loading="lazy" decoding="async"/>
                       <div className="ac-quickadd" onClick={(e)=>{e.stopPropagation();e.preventDefault();cart.addItem(p);}}>+ Add to Bag</div>
                     </div>
                     <div className="ac-prod-info">

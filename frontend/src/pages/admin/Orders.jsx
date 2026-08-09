@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { api } from "../../api/client.js";
+import { Download } from "lucide-react";
+import { api, API_URL, getToken } from "../../api/client.js";
 import { rupee } from "../../data/content.js";
 
 const STATUSES = ["placed", "confirmed", "shipped", "delivered", "cancelled"];
@@ -15,6 +16,30 @@ export default function Orders() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [detail, setDetail] = useState(null);
   const [updating, setUpdating] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+
+  const downloadInvoice = async (order) => {
+    setDownloadingInvoice(true);
+    try {
+      const res = await fetch(`${API_URL}/orders/${order.id}/invoice`, {
+        headers: { Authorization: `Bearer ${getToken()}` }
+      });
+      if (!res.ok) throw new Error("Failed to generate invoice");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Invoice-${order.orderNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      alert("Could not download invoice: " + e.message);
+    } finally {
+      setDownloadingInvoice(false);
+    }
+  };
 
   const load = () => {
     setLoading(true);
@@ -101,7 +126,18 @@ export default function Orders() {
           <div className="adm-modal adm-modal-wide" onClick={e => e.stopPropagation()}>
             <div className="adm-modal-head">
               <h3>Order {detail.orderNumber}</h3>
-              <button className="adm-close-btn" onClick={() => setDetail(null)}>✕</button>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button
+                  className="adm-btn adm-btn-ghost"
+                  style={{ fontSize: 12, padding: "6px 14px" }}
+                  onClick={() => downloadInvoice(detail)}
+                  disabled={downloadingInvoice}
+                >
+                  <Download size={13} style={{ marginRight: 5 }} />
+                  {downloadingInvoice ? "Generating…" : "Invoice"}
+                </button>
+                <button className="adm-close-btn" onClick={() => setDetail(null)}>✕</button>
+              </div>
             </div>
             <div className="adm-order-detail">
               <div className="adm-order-section">
@@ -130,6 +166,7 @@ export default function Orders() {
                 {detail.shiprocket?.awbCode && <p>AWB Code: {detail.shiprocket.awbCode}</p>}
                 {detail.shiprocket?.shipmentId && <p>Shipment ID: {detail.shiprocket.shipmentId}</p>}
                 {detail.couponCode && <p>Coupon: {detail.couponCode} (−{rupee(detail.discount)})</p>}
+                <p>Confirmation Email: {detail.emailSent ? <span style={{ color: "#2f9e5b" }}>✓ Sent</span> : <span style={{ color: "#8a7a68" }}>Not sent</span>}</p>
               </div>
               <div className="adm-order-section">
                 <h4>Update Status</h4>

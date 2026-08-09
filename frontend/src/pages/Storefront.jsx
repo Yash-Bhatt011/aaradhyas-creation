@@ -7,9 +7,10 @@ import {
 } from "lucide-react";
 import {
   Logo, ZariDivider, Eyebrow, StarRow, Reveal,
-  Card3D, HeritageMandala, NewsletterOrnament, PreloaderMark
+  Card3D, HeritageMandala, NewsletterOrnament
 } from "../components/shared.jsx";
 import CartDrawer from "../components/CartDrawer.jsx";
+import LazyImage from "../components/LazyImage.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { api } from "../api/client.js";
 import { img, rupee, OCCASIONS, FABRICS, TESTIMONIALS, GALLERY, WHY_US } from "../data/content.js";
@@ -120,10 +121,15 @@ export default function Storefront() {
 
   return (
     <div className="ac-root">
-      {/* ── Preloader ── */}
+      {/* ── Welcome intro ── */}
       <div className={`ac-preloader ${!loading ? "hide" : ""}`}>
-        <PreloaderMark />
-        <span>Aaradhya's Creation</span>
+        <div className="ac-welcome-frame">
+          <span className="ac-welcome-line" />
+          <p className="ac-welcome-eyebrow">Est. 2009 · Surat, India</p>
+          <h1 className="ac-welcome-title">Welcome to<br/><em>Aaradhya's Creation</em></h1>
+          <p className="ac-welcome-sub">Fine Handwoven Sarees &amp; Kurtis</p>
+          <span className="ac-welcome-line" />
+        </div>
       </div>
 
       <div className="ac-grain" />
@@ -242,7 +248,7 @@ export default function Storefront() {
       {/* ── HERO (split: big banner + 2 stacked promos) ── */}
       <div className="sf2-hero">
         <div className="sf2-hero-main">
-          <img src={siteImages.hero_main ? resolveImg(siteImages.hero_main,1400,1000) : img("aaradhya-hero-main",1400,1000)} alt="Timeless Elegance"/>
+          <LazyImage eager src={siteImages.hero_main ? resolveImg(siteImages.hero_main,1400,1000) : img("aaradhya-hero-main",1400,1000)} alt="Timeless Elegance"/>
           <div className="sf2-hero-main-content">
             <span className="sf2-hero-tag">New Collection</span>
             <h1>Timeless Elegance<br/><em>in Every Drape</em></h1>
@@ -255,7 +261,7 @@ export default function Storefront() {
 
         <div className="sf2-hero-side">
           <div className="sf2-promo sf2-promo-wine" onClick={() => { setCollectionTab("saree"); document.getElementById("collections")?.scrollIntoView({ behavior: "smooth" }); }}>
-            <img src={siteImages.hero_saree_promo ? resolveImg(siteImages.hero_saree_promo,700,500) : img("aaradhya-saree-promo",700,500)} alt="Sarees"/>
+            <LazyImage eager src={siteImages.hero_saree_promo ? resolveImg(siteImages.hero_saree_promo,700,500) : img("aaradhya-saree-promo",700,500)} alt="Sarees"/>
             <div className="sf2-promo-content">
               <h3>Saree</h3>
               <p>Explore Our Exquisite Collection</p>
@@ -263,7 +269,7 @@ export default function Storefront() {
             </div>
           </div>
           <div className="sf2-promo sf2-promo-green" onClick={() => { setCollectionTab("kurti"); document.getElementById("collections")?.scrollIntoView({ behavior: "smooth" }); }}>
-            <img src={siteImages.hero_kurti_promo ? resolveImg(siteImages.hero_kurti_promo,700,500) : img("aaradhya-kurti-promo",700,500)} alt="Kurtis"/>
+            <LazyImage eager src={siteImages.hero_kurti_promo ? resolveImg(siteImages.hero_kurti_promo,700,500) : img("aaradhya-kurti-promo",700,500)} alt="Kurtis"/>
             <div className="sf2-promo-content">
               <h3>Kurti</h3>
               <p>Stylish. Comfortable. Always You.</p>
@@ -322,7 +328,7 @@ export default function Storefront() {
               <Card3D>
                 <div className="ac-coll-card" onClick={() => goCollection(c.id)}>
                   <span className="ac-coll-corner tl" /><span className="ac-coll-corner br" />
-                  <img src={resolveImg(c.seed, 700, 950)} alt={c.title} />
+                  <LazyImage src={resolveImg(c.seed, 700, 950)} alt={c.title} />
                   <div className="ac-coll-overlay">
                     <h3>{c.title}</h3>
                     <p>{c.sub}</p>
@@ -373,8 +379,8 @@ export default function Storefront() {
                       <button className="ac-wish-btn" onClick={(e)=>{e.stopPropagation();e.preventDefault();toggleWishlist(p.id);}}>
                         <Heart size={15} fill={wishlist.has(p.id) ? "#4C0E1B" : "none"} color="#4C0E1B" />
                       </button>
-                      <img className="first"  src={productImg(p, 600, 800, 0)} alt={p.name} />
-                      <img className="second" src={productImg(p, 600, 800, 1)} alt={p.name} />
+                      <img className="first"  src={productImg(p, 600, 800, 0)} alt={p.name} loading="lazy" decoding="async"/>
+                      <img className="second" src={productImg(p, 600, 800, 1)} alt={p.name} loading="lazy" decoding="async"/>
                       <div className="ac-quickadd" onClick={(e)=>{e.stopPropagation();e.preventDefault();cart.addItem(p);}}>+ Quick Add to Bag</div>
                     </div>
                     <div className="ac-prod-info">
@@ -397,7 +403,7 @@ export default function Storefront() {
       {/* ── BRIDAL SPLIT ── */}
       <Reveal as="section" className="ac-split">
         <div className="ac-split-img">
-          <img src={siteImages.bridal_split ? resolveImg(siteImages.bridal_split,1000,1200) : img("aaradhya-bridal-edit-2026",1000,1200)} alt="Bridal saree" />
+          <LazyImage src={siteImages.bridal_split ? resolveImg(siteImages.bridal_split,1000,1200) : img("aaradhya-bridal-edit-2026",1000,1200)} alt="Bridal saree" />
         </div>
         <div className="ac-split-text">
           <span className="accent">SIGNATURE COLLECTION</span>
@@ -419,7 +425,7 @@ export default function Storefront() {
           {OCCASIONS.map((o, i) => (
             <Reveal delay={i * 60} key={o} className="ac-occ">
               <div className="ac-occ-circle">
-                <img src={occImg(o, i)} alt={o} />
+                <LazyImage src={occImg(o, i)} alt={o} />
               </div>
               <p>{o}</p>
             </Reveal>
@@ -440,7 +446,7 @@ export default function Storefront() {
               <Reveal delay={(i % 4) * 80} key={f.name}>
                 <Card3D>
                   <div className="ac-fab-card">
-                    <img src={fabImg(f.name)} alt={f.name} />
+                    <LazyImage src={fabImg(f.name)} alt={f.name} />
                     <span className="ac-fab-label">{f.name}</span>
                   </div>
                 </Card3D>
@@ -470,7 +476,7 @@ export default function Storefront() {
                 <button className="ac-wish-btn" onClick={(e)=>{e.stopPropagation();e.preventDefault();toggleWishlist(p.id);}}>
                   <Heart size={15} fill={wishlist.has(p.id) ? "#4C0E1B" : "none"} color="#4C0E1B" />
                 </button>
-                <img src={productImg(p, 600, 800, 0)} alt={p.name} />
+                <LazyImage src={productImg(p, 600, 800, 0)} alt={p.name} />
               </div>
               <div className="ac-prod-info">
                 <h4>{p.name}</h4>
@@ -507,7 +513,7 @@ export default function Storefront() {
           </div>
         </div>
         <div className="ac-split-img" style={{ order: 1 }}>
-          <img src={siteImages.heritage ? resolveImg(siteImages.heritage,1000,1200) : img("aaradhya-heritage-weaver",1000,1200)} alt="Artisan weaving" />
+          <LazyImage src={siteImages.heritage ? resolveImg(siteImages.heritage,1000,1200) : img("aaradhya-heritage-weaver",1000,1200)} alt="Artisan weaving" />
         </div>
       </Reveal>
 
@@ -553,7 +559,7 @@ export default function Storefront() {
           {GALLERY.map((_, i) => (
             <Reveal delay={(i % 6) * 70} key={i}>
               <div className="ac-gal-item">
-                <img src={galImg(i)} alt="Editorial styling" />
+                <LazyImage src={galImg(i)} alt="Editorial styling" />
               </div>
             </Reveal>
           ))}
@@ -603,9 +609,6 @@ export default function Storefront() {
           <div className="ac-foot-col">
             <h5>Support</h5>
             {["Contact Us","Shipping Info","Returns & Exchanges","FAQs"].map(l => <div key={l}>{l}</div>)}
-            <Link to="/login" style={{ display: "block", padding: "6px 0", color: "rgba(251,246,236,0.55)", fontSize: 12 }}>
-              Sign In / My Account
-            </Link>
           </div>
         </div>
         <div className="ac-foot-bottom">
