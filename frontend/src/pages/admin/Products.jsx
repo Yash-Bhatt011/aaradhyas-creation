@@ -25,7 +25,7 @@ const BLANK = {
   // Profit calculator inputs (all optional, % or ₹)
   packagingCost:"", shippingCost:"",
   paymentGatewayPct:"2.36", platformFeePct:"0",
-  gstPct:"5", returnRatePct:"3", marketingPct:"0"
+  gstPct:"5", gstInclusive:true, hsnCode:"", returnRatePct:"3", marketingPct:"0"
 };
 
 /** Computes a full profit breakdown from a product form's pricing fields. */
@@ -42,7 +42,12 @@ function computeProfit(f) {
 
   const paymentGatewayFee = price * (pgPct  / 100);
   const platformFee       = price * (platPct/ 100);
-  const gst                = price * (gstPct / 100);
+  // FIXED: correctly back-calculate GST when the price is GST-inclusive.
+  // The old flat-percentage formula overstated GST by taxing the tax-inclusive
+  // price instead of the taxable base. This now matches the backend's real
+  // order-based calculation (services/profitCalculator.js) and the invoice.
+  const gstInclusive = f.gstInclusive !== false;
+  const gst = gstInclusive ? price - (price / (1 + gstPct / 100)) : price * (gstPct / 100);
   const marketingCost     = price * (mktPct / 100);
   const returnLossReserve = price * (retPct / 100);
 
@@ -375,6 +380,18 @@ export default function Products() {
                   <label>GST (%)</label>
                   <input type="number" step="0.1" value={form.gstPct} onChange={up("gstPct")} placeholder="5"/>
                   <span className="sfy-hint">5% on textiles in India</span>
+                </div>
+                <div className="sfy-field">
+                  <label>GST Pricing</label>
+                  <select value={form.gstInclusive !== false ? "inclusive" : "exclusive"} onChange={e=>setForm(f=>({...f,gstInclusive:e.target.value==="inclusive"}))}>
+                    <option value="inclusive">Inclusive (price includes GST)</option>
+                    <option value="exclusive">Exclusive (GST added on top)</option>
+                  </select>
+                  <span className="sfy-hint">Match your Settings → GST setting</span>
+                </div>
+                <div className="sfy-field">
+                  <label>HSN/SAC Code</label>
+                  <input value={form.hsnCode || ""} onChange={up("hsnCode")} placeholder="5407 (blank = store default)"/>
                 </div>
                 <div className="sfy-field">
                   <label>Returns / RTO reserve (%)</label>

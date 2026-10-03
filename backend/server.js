@@ -39,7 +39,13 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json({
+  limit: "5mb",
+  // Capture the raw request body alongside the parsed one — needed to verify
+  // the Razorpay webhook signature (HMAC must be computed over the exact
+  // raw bytes Razorpay sent, not a re-serialized version of the parsed JSON).
+  verify: (req, res, buf) => { req.rawBody = buf; }
+}));
 app.use(morgan("dev"));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
@@ -67,7 +73,7 @@ const PORT = process.env.PORT || 5000;
 
 (async () => {
   try {
-    await db.init(); // connects to MongoDB if MONGODB_URI is set, else no-op
+    await db.init(); // connects to Supabase/MongoDB if configured, else no-op
 
     // Auto-seed on first boot: if there's no admin account yet, populate
     // starter content + create the admin from ADMIN_EMAIL/ADMIN_PASSWORD.
@@ -102,7 +108,8 @@ const PORT = process.env.PORT || 5000;
 
     app.listen(PORT, () => {
       console.log(`Aaradhya's Creation API running on port ${PORT}`);
-      console.log(`Storage mode: ${db.USE_MONGO ? "MongoDB (persistent)" : "Local JSON file (data/db.json)"}`);
+      const modeLabel = db.USE_SUPABASE ? "Supabase (persistent)" : db.USE_MONGO ? "MongoDB (persistent)" : "Local JSON file (data/db.json)";
+      console.log(`Storage mode: ${modeLabel}`);
     });
   } catch (err) {
     console.error("Failed to start server:", err);

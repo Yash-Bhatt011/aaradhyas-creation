@@ -145,7 +145,7 @@ export default function Storefront() {
       <div className="sf2-topbar">
         <span className="sf2-topbar-left">★ Free shipping on orders above ₹999</span>
         <div className="sf2-topbar-right">
-          <Link to="/"><Package2 size={13}/>Track Order</Link>
+          <Link to="/track-order"><Package2 size={13}/>Track Order</Link>
           <span><Heart size={13}/>Wishlist</span>
           <Link to="/login"><Headphones size={13}/>Customer Support</Link>
           <a href={`tel:${settings.whatsapp || "+919876543210"}`}><Phone size={13}/>{settings.whatsapp || "+91 98765 43210"}</a>
@@ -609,6 +609,9 @@ export default function Storefront() {
           <div className="ac-foot-col">
             <h5>Support</h5>
             {["Contact Us","Shipping Info","Returns & Exchanges","FAQs"].map(l => <div key={l}>{l}</div>)}
+            <Link to="/login" style={{ display: "block", padding: "6px 0", color: "rgba(251,246,236,0.55)", fontSize: 12 }}>
+              Sign In / My Account
+            </Link>
           </div>
         </div>
         <div className="ac-foot-bottom">

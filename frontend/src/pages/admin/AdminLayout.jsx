@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
 import {
   LayoutDashboard, Package, FolderOpen, ShoppingBag, Users,
-  Image, Tag, Settings, LogOut, Star, ExternalLink, Store, Megaphone
+  Image, Tag, Settings, LogOut, Star, ExternalLink, Store, Megaphone, AlertTriangle
 } from "lucide-react";
+import { api } from "../../api/client.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import "../../styles/admin.css";
 
@@ -25,7 +26,15 @@ const MANAGE_NAV = [
 export default function AdminLayout() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
+  const [pendingCancellations, setPendingCancellations] = useState(0);
   const handleLogout = () => { logout(); navigate("/"); };
+
+  useEffect(() => {
+    const fetchPending = () => api.getCancellations("requested").then(r => setPendingCancellations(r.length)).catch(() => {});
+    fetchPending();
+    const interval = setInterval(fetchPending, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="adm-root">
@@ -54,6 +63,18 @@ export default function AdminLayout() {
               <Icon size={16}/>{label}
             </NavLink>
           ))}
+          <NavLink to="/admin/cancellations"
+            className={({ isActive }) => `adm-nav-item ${isActive ? "active" : ""}`}
+            style={{ justifyContent: "space-between" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <AlertTriangle size={16}/>Cancellations
+            </span>
+            {pendingCancellations > 0 && (
+              <span style={{ background: "#d94f4f", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 100, padding: "1px 7px", minWidth: 18, textAlign: "center" }}>
+                {pendingCancellations}
+              </span>
+            )}
+          </NavLink>
         </nav>
 
         <div className="adm-exit" onClick={handleLogout}>

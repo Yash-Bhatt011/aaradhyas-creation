@@ -71,6 +71,29 @@ export const api = {
   getOrders: () => request("/orders", { auth: true }),
   updateOrder: (id, data) => request(`/orders/${id}`, { method: "PUT", body: data, auth: true }),
 
+  // Customer order lookup + cancellation
+  getOrderForCustomer: (id, email) => request(`/orders/${id}/customer?email=${encodeURIComponent(email)}`),
+  requestCancellation: (id, email, reason, note) =>
+    request(`/orders/${id}/cancel-request`, { method: "POST", body: { email, reason, note } }),
+
+  // Admin cancellation management
+  getCancellations: (status) => request(`/orders/cancellations${status ? `?status=${status}` : ""}`, { auth: true }),
+  approveCancellation: (id, adminNote, refundAmount) =>
+    request(`/orders/${id}/cancel-approve`, { method: "PUT", body: { adminNote, refundAmount }, auth: true }),
+  rejectCancellation: (id, adminNote) =>
+    request(`/orders/${id}/cancel-reject`, { method: "PUT", body: { adminNote }, auth: true }),
+  markRefundProcessed: (id, data) =>
+    request(`/orders/${id}/refund-mark`, { method: "PUT", body: data, auth: true }),
+
+  // Profit reporting
+  getProfitSummary: (from, to) => {
+    const params = new URLSearchParams();
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    return request(`/orders/profit-summary?${params.toString()}`, { auth: true });
+  },
+  getOrderProfit: (id) => request(`/orders/${id}/profit`, { auth: true }),
+
   // Customers
   getCustomers: () => request("/customers", { auth: true }),
 

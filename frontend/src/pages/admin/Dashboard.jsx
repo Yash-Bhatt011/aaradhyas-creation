@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ShoppingBag, Users, Package, TrendingUp, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ShoppingBag, Users, Package, TrendingUp, AlertCircle, AlertTriangle, IndianRupee, RotateCcw } from "lucide-react";
 import { api } from "../../api/client.js";
 import { rupee } from "../../data/content.js";
 
@@ -23,17 +24,24 @@ export default function Dashboard() {
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [profitSummary, setProfitSummary] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([api.getOrders(), api.getProducts(true), api.getCustomers()])
-      .then(([o, p, c]) => { setOrders(o); setProducts(p); setCustomers(c); })
+    Promise.all([api.getOrders(), api.getProducts(true), api.getCustomers(), api.getProfitSummary()])
+      .then(([o, p, c, profit]) => { setOrders(o); setProducts(p); setCustomers(c); setProfitSummary(profit); })
       .finally(() => setLoading(false));
   }, []);
 
   const totalRevenue = orders.filter(o => o.paymentStatus === "paid").reduce((s, o) => s + o.total, 0);
   const pendingOrders = orders.filter(o => o.status === "placed").length;
   const lowStock = products.filter(p => p.stock > 0 && p.stock <= 3);
+
+  const pendingCancellations = orders.filter(o => o.cancellation?.status === "requested");
+  const cancelledOrders = orders.filter(o => o.status === "cancelled");
+  const refundsPending = cancelledOrders.filter(o => ["manual_required","pending","failed"].includes(o.cancellation?.refund?.status));
+  const refundsCompleted = cancelledOrders.filter(o => o.cancellation?.refund?.status === "processed");
+  const totalRefunded = refundsCompleted.reduce((s, o) => s + (o.cancellation?.refund?.amount || 0), 0);
 
   const recentOrders = orders.slice(0, 8);
 
@@ -47,7 +55,7 @@ export default function Dashboard() {
       {loading ? <div className="adm-loading">Loading…</div> : (
         <>
           <div className="adm-stats-grid">
-            <StatCard icon={TrendingUp} label="Total Revenue" value={rupee(totalRevenue)} sub={`${orders.filter(o => o.paymentStatus === "paid").length} paid orders`} colorClass="gold" />
+            <StatCard icon={TrendingUp} label="Net Profit" value={profitSummary ? rupee(profitSummary.totals.netProfit) : "—"} sub={profitSummary ? `${profitSummary.averageMarginPct}% avg margin · ${profitSummary.activeOrderCount} orders` : ""} colorClass="gold" />
             <StatCard icon={ShoppingBag} label="Total Orders" value={orders.length} sub={`${pendingOrders} pending`} colorClass="blue" />
             <StatCard icon={Users} label="Customers" value={customers.length} sub="All time" colorClass="wine" />
             <StatCard icon={Package} label="Products" value={products.length} sub={`${products.filter(p => p.active).length} active`} colorClass="green" />
@@ -60,6 +68,22 @@ export default function Dashboard() {
               {lowStock.map(p => `${p.name} (${p.stock} left)`).join(" · ")}
             </div>
           )}
+
+          {pendingCancellations.length > 0 && (
+            <div className="adm-alert" style={{ background: "#fce8e6", borderColor: "#f4b9b2" }}>
+              <AlertTriangle size={16} color="#d94f4f" />
+              <strong>{pendingCancellations.length} cancellation request{pendingCancellations.length !== 1 ? "s" : ""} awaiting review</strong>
+              <Link to="/admin/cancellations" style={{ marginLeft: "auto", color: "#d94f4f", fontWeight: 600, fontSize: 12.5, textDecoration: "underline" }}>Review now →</Link>
+            </div>
+          )}
+
+          <div className="adm-section-head"><h2>Cancellations &amp; Refunds</h2></div>
+          <div className="adm-stats-grid" style={{ marginBottom: 32 }}>
+            <StatCard icon={AlertTriangle} label="Pending Requests" value={pendingCancellations.length} colorClass="wine" />
+            <StatCard icon={RotateCcw} label="Cancelled Orders" value={cancelledOrders.length} colorClass="blue" />
+            <StatCard icon={IndianRupee} label="Refunds Pending" value={refundsPending.length} colorClass="green" />
+            <StatCard icon={IndianRupee} label="Total Refunded" value={rupee(totalRefunded)} sub={`${refundsCompleted.length} completed`} colorClass="gold" />
+          </div>
 
           <div className="adm-section-head"><h2>Recent Orders</h2></div>
           <div className="adm-table-wrap">

@@ -8,7 +8,7 @@ const { init, read, write, close } = require("./db");
 const { runSeed } = require("./seedData");
 
 async function seed() {
-  await init(); // connects to MongoDB if MONGODB_URI is set, else no-op
+  await init(); // connects to Supabase/MongoDB if configured, else no-op
   const db = read();
   await runSeed(db);
   await write(db);

@@ -389,6 +389,18 @@ const STORE_FIELDS = [
   {k:"refundMode",label:"Refund Mode"},
 ];
 
+const GST_FIELDS = [
+  {k:"legalBusinessName",label:"Legal Business Name (for invoices)"},
+  {k:"gstin",label:"GSTIN"},
+  {k:"placeOfSupplyState",label:"Place of Supply (Your State)", hint:"e.g. Gujarat — decides CGST+SGST vs IGST"},
+  {k:"defaultHsnCode",label:"Default HSN/SAC Code", hint:"e.g. 5407 for woven fabrics"},
+  {k:"defaultGstPct",label:"Default GST Rate (%)",type:"number"},
+  {k:"gstInclusive",label:"Prices are GST-Inclusive",type:"checkbox", hint:"ON: listed prices already include GST (typical retail). OFF: GST added on top."},
+  {k:"paymentGatewayPct",label:"Payment Gateway Fee (%)",type:"number", hint:"Razorpay is typically ~2-2.36% — used in profit reports"},
+  {k:"actualShippingCostPerOrder",label:"Avg. Courier Cost per Order (Rs)",type:"number", hint:"Optional — what you actually pay the courier"},
+  {k:"invoiceTerms",label:"Invoice Terms & Conditions",type:"textarea"},
+];
+
 // All the image slots for the storefront
 const HERO_ROWS = [
   {key:"hero_main",    label:"🖼 Hero Background",          hint:"Main large banner (left side of homepage hero)"},
@@ -496,6 +508,7 @@ export function Settings() {
 
       <div className="adm-tab-bar">
         <button className={`adm-tab ${tab==="store"?"active":""}`} onClick={()=>setTab("store")}>🏪 Store Info</button>
+        <button className={`adm-tab ${tab==="gst"?"active":""}`} onClick={()=>setTab("gst")}>🧾 GST &amp; Invoice</button>
         <button className={`adm-tab ${tab==="hero"?"active":""}`} onClick={()=>setTab("hero")}>🖼 Hero &amp; Banners</button>
         <button className={`adm-tab ${tab==="occasions"?"active":""}`} onClick={()=>setTab("occasions")}>⭕ Occasion Photos</button>
         <button className={`adm-tab ${tab==="fabrics"?"active":""}`} onClick={()=>setTab("fabrics")}>🧵 Fabric Photos</button>
@@ -521,6 +534,30 @@ export function Settings() {
               <strong style={{color:"var(--adm-text)"}}>Razorpay:</strong> Add <code>RAZORPAY_KEY_ID</code> &amp; <code>RAZORPAY_KEY_SECRET</code> to <code>backend/.env</code><br/>
               <strong style={{color:"var(--adm-text)"}}>Shiprocket:</strong> Add <code>SHIPROCKET_EMAIL</code> &amp; <code>SHIPROCKET_PASSWORD</code> to <code>backend/.env</code>
             </p>
+          </div>
+        </div>
+      )}
+
+      {tab==="gst"&&(
+        <div className="adm-settings-card">
+          <div style={{padding:"14px 20px",borderBottom:"1px solid var(--adm-border)",background:"#fffbf4"}}>
+            <p style={{margin:0,fontSize:13,color:"var(--adm-muted)"}}>
+              These details appear on every customer invoice and drive GST calculations. Nothing here is hard-coded — it all comes from what you enter below.
+            </p>
+          </div>
+          <div className="adm-form-grid">
+            {GST_FIELDS.map(({k,label,type="text",hint})=>(
+              <div className={`adm-field ${type==="checkbox"?"adm-checkbox-field":""} ${type==="textarea"?"full":""}`} key={k}>
+                {type==="checkbox" ? (
+                  <label><input type="checkbox" checked={!!settings?.[k]} onChange={up(k)}/> {label}</label>
+                ) : type==="textarea" ? (
+                  <><label>{label}</label><textarea rows={3} value={settings?.[k]??""} onChange={up(k)}/></>
+                ) : (
+                  <><label>{label}</label><input type={type} value={settings?.[k]??""} onChange={up(k)}/></>
+                )}
+                {hint && <span className="sfy-hint">{hint}</span>}
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -87,6 +87,46 @@ npm run dev
 
 > **Test mode:** Leave the keys blank. Checkout still works end-to-end using a mock flow so you can test orders without real money.
 
+### Also set up the webhook (strongly recommended before going live)
+
+Without this, payment confirmation relies entirely on the customer's browser calling your server right after paying. If they close the tab at exactly the wrong moment, Razorpay has their money but your database might never record the order as paid. The webhook is a direct server-to-server call from Razorpay, independent of the customer's browser — the reliable source of truth.
+
+1. Razorpay Dashboard → **Settings → Webhooks → Add New Webhook**
+2. Webhook URL: `https://your-backend.onrender.com/api/payments/razorpay/webhook`
+3. Active events: check **`payment.captured`**
+4. Set any secret string, then add it to `backend/.env`:
+   ```
+   RAZORPAY_WEBHOOK_SECRET=the_secret_you_just_set
+   ```
+5. Save. Test it by placing a real order — you should see `Webhook: order AC-xxxx confirmed paid` in your Render logs.
+
+---
+
+## Order Confirmation Emails & Invoices
+
+By default, orders complete fine but no real email is sent (it's logged to the console instead) — safe for local development. To send real confirmation emails with a PDF invoice attached:
+
+1. **Simplest option — Gmail with an App Password** (free, no new account needed if you already have Gmail):
+   - Go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+   - Create an app password for "Mail"
+   - Add to `backend/.env`:
+     ```
+     SMTP_HOST=smtp.gmail.com
+     SMTP_PORT=587
+     SMTP_USER=youremail@gmail.com
+     SMTP_PASS=the_16_character_app_password
+     SMTP_FROM="Aaradhya's Creation <youremail@gmail.com>"
+     ADMIN_NOTIFY_EMAIL=youremail@gmail.com
+     ```
+2. Any other SMTP provider (Brevo, Zoho Mail, SendGrid, etc.) works too — just change the host/port/credentials.
+
+**What happens automatically once this is set:**
+- Customer gets an order confirmation email with a PDF invoice attached, immediately after checkout
+- You (the store owner) get an email alert for every new order
+- The order confirmation page also lets customers download their invoice directly, and the admin Orders panel has a "Invoice" download button on every order
+
+Email sending never blocks or slows down checkout — it happens in the background after the customer already sees their order confirmed, and if it fails for any reason, the order itself is unaffected.
+
 ---
 
 ## Integrating Shiprocket (Shipping)
@@ -171,43 +211,57 @@ Set env vars in Railway dashboard.
 
 ---
 
-## Persistent Database (MongoDB Atlas — Free Forever)
+## Persistent Database & Image Storage (Supabase — Recommended)
 
-**Important for Render/Railway free tier deploys:** by default this project stores data in a local JSON file (`backend/data/db.json`). That's fine for local development, but on free hosting tiers the filesystem is wiped on every redeploy or restart — meaning your products, orders, and admin login would reset each time.
+**Important for Render/Railway free tier deploys:** by default this project stores data in a local JSON file (`backend/data/db.json`) and uploaded photos on local disk. That's fine for local development, but on free hosting tiers the filesystem is wiped on every redeploy or restart — meaning your products, orders, admin login, and uploaded images would all reset each time.
 
-The fix: connect a free MongoDB Atlas database (512MB free forever, no credit card required). Data then survives every redeploy automatically — no code changes needed on your end.
+The fix: connect a free Supabase project (500MB database + 1GB file storage, free forever, no credit card required). This single account handles **both** your database and your uploaded images — no need for two separate services.
 
-### Setup (5 minutes)
+### Setup (5–10 minutes)
 
-1. Sign up at [mongodb.com/cloud/atlas/register](https://www.mongodb.com/cloud/atlas/register)
-2. Create a free **M0 cluster** (select any region close to you)
-3. **Database Access** (left sidebar) → Add New Database User → set a username + password (save these!)
-4. **Network Access** (left sidebar) → Add IP Address → **Allow Access from Anywhere** (`0.0.0.0/0`)
-   *(Render's servers use dynamic IPs, so this is required — Atlas still requires username/password auth, so this is safe.)*
-5. **Database → Connect → Drivers** → copy the connection string, it looks like:
-   ```
-   mongodb+srv://username:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
-   ```
-6. Replace `<password>` with the actual password from step 3
+**1. Create your project**
+- Sign up at [supabase.com/dashboard/sign-up](https://supabase.com/dashboard/sign-up)
+- Create a new project (pick a region close to you, set a database password — save it somewhere, though you won't need it for the app itself)
+- Wait ~2 minutes for the project to finish provisioning
+
+**2. Create the database table**
+- In your project, open **SQL Editor** (left sidebar) → **New Query**
+- Open `backend/supabase-setup.sql` from this project, copy its contents, paste into the SQL editor
+- Click **Run**. You should see "Success. No rows returned."
+
+**3. Create the image storage bucket**
+- Open **Storage** (left sidebar) → **New Bucket**
+- Name it exactly: `images`
+- Toggle **Public bucket** ON (so uploaded photos actually load in the browser)
+- Click **Create bucket**
+
+**4. Get your API credentials**
+- Open **Settings** (gear icon, bottom of sidebar) → **API**
+- Copy the **Project URL**
+- Copy the **`service_role`** secret key — **not** the `anon` public key. The service_role key is what lets your backend bypass Row Level Security; it must never be exposed to the frontend, which is why it only ever goes in `backend/.env` or Render's environment variables, never in any frontend `VITE_` variable.
 
 ### Add it to your backend
 
 **Local development** — add to `backend/.env`:
 ```
-MONGODB_URI=mongodb+srv://username:yourpassword@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....(long string)
+SUPABASE_STORAGE_BUCKET=images
 ```
 
-**Render production** — go to your backend service → **Environment** tab → add:
-```
-MONGODB_URI=mongodb+srv://username:yourpassword@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
-```
+**Render production** — go to your backend service → **Environment** tab → add the same three variables.
+
 Then redeploy. Check the deploy logs — you should see:
 ```
-MongoDB: connected and data loaded successfully.
-Storage mode: MongoDB (persistent)
+Supabase: connected and data loaded successfully.
+Storage mode: Supabase (persistent)
 ```
 
-That's it. Your data now survives every redeploy permanently. Leave `MONGODB_URI` blank to keep using the local JSON file (e.g. for quick local testing).
+That's it. Your products, orders, customers, settings, and every uploaded photo now survive every redeploy permanently, all inside one free Supabase project.
+
+### Alternative: MongoDB Atlas (if you'd rather not use Supabase)
+
+This project still supports MongoDB Atlas for the database (see `MONGODB_URI` in `.env.example`) and Cloudinary for images (`CLOUDINARY_URL`) — kept for anyone with an existing setup from an earlier version. If `SUPABASE_URL` is set, it always takes priority; leave it blank to use MongoDB/Cloudinary instead.
 
 ---
 
